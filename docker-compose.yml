@@ -4,7 +4,7 @@ services:
     container_name: birdweather-bluesky-bot
     restart: unless-stopped
     environment:
-      - STATION_ID=17550
+      - STATION_ID=${STATION_ID}
       - BIRDWEATHER_TOKEN=${BIRDWEATHER_TOKEN}
       - BLUESKY_HANDLE=${BLUESKY_HANDLE}
       - BLUESKY_APP_PASSWORD=${BLUESKY_APP_PASSWORD}
