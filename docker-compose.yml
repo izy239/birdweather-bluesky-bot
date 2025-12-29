@@ -1,0 +1,23 @@
+services:
+  birdweather-bot:
+    build: .
+    container_name: birdweather-bluesky-bot
+    restart: unless-stopped
+    environment:
+      - STATION_ID=17550
+      - BIRDWEATHER_TOKEN=${BIRDWEATHER_TOKEN}
+      - BLUESKY_HANDLE=${BLUESKY_HANDLE}
+      - BLUESKY_APP_PASSWORD=${BLUESKY_APP_PASSWORD}
+      - FLICKR_API_KEY=${FLICKR_API_KEY}
+      - POLL_INTERVAL_MINUTES=15
+      - MIN_CONFIDENCE=0.7
+      - INCLUDE_LINK=true
+      - INCLUDE_IMAGE=true
+      - TIMEZONE=America/New_York
+    volumes:
+      - ./data:/app/data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
