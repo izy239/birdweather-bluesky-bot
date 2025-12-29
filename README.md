@@ -28,18 +28,19 @@ cd birdweather-bluesky-bot
 ```
 
 2. **Create `.env` file with your credentials**
-
+```bash
+cat > .env << 'EOL'
+STATION_ID=your_station_id
 BIRDWEATHER_TOKEN=your_birdweather_token
 BLUESKY_HANDLE=your-bot.bsky.social
 BLUESKY_APP_PASSWORD=your_app_password
 FLICKR_API_KEY=your_flickr_api_key
-
+EOL
 ```
 
-3. **Configure settings in `docker-compose.yml`**
+3. **Configure optional settings in `docker-compose.yml`**
 ```yaml
 environment:
-  - STATION_ID=17550                    # Your BirdWeather station ID
   - TIMEZONE=America/New_York           # Your timezone
   - POLL_INTERVAL_MINUTES=15           # How often to check (minutes)
   - MIN_CONFIDENCE=0.7                 # Minimum confidence (0.0-1.0)
@@ -61,20 +62,24 @@ docker compose logs -f
 
 ### Getting Your Credentials
 
+**Station ID:**
+- Find it in your BirdWeather station URL: `https://app.birdweather.com/stations/XXXXX`
+- Add to `.env` file
+
 **BirdWeather Token:**
 - Go to your station at https://app.birdweather.com/stations/YOUR_ID
 - Find your station token in settings
+- Add to `.env` file
 
 **Bluesky App Password:**
 - Go to Bluesky Settings → App Passwords
 - Create a new app password (don't use your main password!)
+- Add to `.env` file
 
 **Flickr API Key:**
 - Apply at https://www.flickr.com/services/apps/create/apply/
 - Choose "Non-Commercial" (it's free and instant)
-
-**Station ID:**
-- Find it in your BirdWeather station URL: `https://app.birdweather.com/stations/XXXXX`
+- Add to `.env` file
 
 ### Timezone Options
 
