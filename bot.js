@@ -69,39 +69,6 @@ async function initBluesky() {
   console.log('✓ Logged into Bluesky');
 }
 
-// Fetch recent detections from BirdWeather
-async function fetchDetections() {
-  const url = `https://app.birdweather.com/api/v1/stations/${CONFIG.stationId}/detections`;
-  
-  try {
-    const response = await fetch(url, {
-      headers: {
-        'Authorization': `Bearer ${CONFIG.birdweatherToken}`
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error(`BirdWeather API error: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return data.detections || [];
-  } catch (error) {
-    console.error('Error fetching detections:', error);
-    return [];
-  }
-}
-
-// Filter detections for new ones since last check
-function filterNewDetections(detections) {
-  return detections.filter(d => {
-    const detectionTime = new Date(d.timestamp);
-    const confidence = d.confidence || 0;
-    
-    return detectionTime > lastCheckTime && confidence >= CONFIG.minConfidence;
-  });
-}
-
 // Fetch bird image from Flickr
 async function fetchBirdImage(birdName) {
   if (!CONFIG.flickrApiKey || !CONFIG.includeImage) {
@@ -146,6 +113,55 @@ async function fetchBirdImage(birdName) {
   return null;
 }
 
+// Fetch recent detections from BirdWeather
+async function fetchDetections() {
+  const url = `https://app.birdweather.com/api/v1/stations/${CONFIG.stationId}/detections`;
+  
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${CONFIG.birdweatherToken}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`BirdWeather API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data.detections || [];
+  } catch (error) {
+    console.error('Error fetching detections:', error);
+    return [];
+  }
+}
+
+// Filter detections for new ones since last check and deduplicate by species
+function filterNewDetections(detections) {
+  // First filter by time and confidence
+  const validDetections = detections.filter(d => {
+    const detectionTime = new Date(d.timestamp);
+    const confidence = d.confidence || 0;
+    
+    return detectionTime > lastCheckTime && confidence >= CONFIG.minConfidence;
+  });
+  
+  // Group by species and keep only the highest confidence detection for each
+  const speciesMap = new Map();
+  
+  for (const detection of validDetections) {
+    const species = detection.species?.commonName || 'Unknown';
+    const existing = speciesMap.get(species);
+    
+    if (!existing || detection.confidence > existing.confidence) {
+      speciesMap.set(species, detection);
+    }
+  }
+  
+  // Return array of best detections per species
+  return Array.from(speciesMap.values());
+}
+
 // Format and post detection to Bluesky
 async function postToBluesky(detection) {
   const species = detection.species?.commonName || 'Unknown bird';
@@ -162,7 +178,6 @@ async function postToBluesky(detection) {
     hour12: true
   });
   
-  // Get the timezone abbreviation (EST or EDT)
   const timeZone = detectionDate.toLocaleString('en-US', {
     timeZone: CONFIG.timezone,
     timeZoneName: 'short'
@@ -192,9 +207,6 @@ async function postToBluesky(detection) {
     // Build the post with proper byte position tracking
     const encoder = new TextEncoder();
     const facets = [];
-    
-    // Track position for facets
-    let currentText = postText;
     
     // Find and create facet for each hashtag
     const hashtagRegex = /#(\w+)/g;

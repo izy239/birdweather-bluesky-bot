@@ -3,13 +3,13 @@ import fetch from 'node-fetch';
 
 const CONFIG = {
   stationId: process.env.STATION_ID || '17550',
-  timezone: process.env.TIMEZONE || 'America/New_York',
   birdweatherToken: process.env.BIRDWEATHER_TOKEN,
   blueskyHandle: process.env.BLUESKY_HANDLE,
   blueskyAppPassword: process.env.BLUESKY_APP_PASSWORD,
   flickrApiKey: process.env.FLICKR_API_KEY,
   includeLink: process.env.INCLUDE_LINK !== 'false',
   includeImage: process.env.INCLUDE_IMAGE !== 'false',
+  timezone: process.env.TIMEZONE || 'America/New_York',
 };
 
 let agent = null;
