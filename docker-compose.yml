@@ -8,16 +8,11 @@ services:
       - BIRDWEATHER_TOKEN=${BIRDWEATHER_TOKEN}
       - BLUESKY_HANDLE=${BLUESKY_HANDLE}
       - BLUESKY_APP_PASSWORD=${BLUESKY_APP_PASSWORD}
-      - FLICKR_API_KEY=${FLICKR_API_KEY}
+      - UNSPLASH_ACCESS_KEY=${UNSPLASH_ACCESS_KEY}
+      - TIMEZONE=America/New_York
       - POLL_INTERVAL_MINUTES=15
       - MIN_CONFIDENCE=0.7
       - INCLUDE_LINK=true
       - INCLUDE_IMAGE=true
-      - TIMEZONE=America/New_York
     volumes:
       - ./data:/app/data
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"

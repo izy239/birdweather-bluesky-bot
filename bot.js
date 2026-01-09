@@ -9,7 +9,7 @@ const CONFIG = {
   birdweatherToken: process.env.BIRDWEATHER_TOKEN,
   blueskyHandle: process.env.BLUESKY_HANDLE,
   blueskyAppPassword: process.env.BLUESKY_APP_PASSWORD,
-  flickrApiKey: process.env.FLICKR_API_KEY,
+  unsplashAccessKey: process.env.UNSPLASH_ACCESS_KEY,
   pollIntervalMinutes: parseInt(process.env.POLL_INTERVAL_MINUTES || '15'),
   minConfidence: parseFloat(process.env.MIN_CONFIDENCE || '0.7'),
   includeLink: process.env.INCLUDE_LINK !== 'false',
@@ -69,35 +69,44 @@ async function initBluesky() {
   console.log('✓ Logged into Bluesky');
 }
 
-// Fetch bird image from Flickr
+// Fetch bird image from Unsplash
 async function fetchBirdImage(birdName) {
-  if (!CONFIG.flickrApiKey || !CONFIG.includeImage) {
+  if (!CONFIG.unsplashAccessKey || !CONFIG.includeImage) {
     return null;
   }
 
   try {
-    const searchUrl = `https://www.flickr.com/services/rest/?method=flickr.photos.search&api_key=${CONFIG.flickrApiKey}&text=${encodeURIComponent(birdName)}&license=1,2,3,4,5,6,9,10&content_type=1&media=photos&per_page=5&format=json&nojsoncallback=1&sort=relevance`;
+    const searchUrl = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(birdName)}&per_page=10&orientation=landscape&content_filter=high`;
     
-    const response = await fetch(searchUrl);
+    const response = await fetch(searchUrl, {
+      headers: {
+        'Authorization': `Client-ID ${CONFIG.unsplashAccessKey}`
+      }
+    });
+    
     const data = await response.json();
     
-    if (data.photos && data.photos.photo && data.photos.photo.length > 0) {
+    if (data.results && data.results.length > 0) {
       // Get a random photo from the results
-      const photo = data.photos.photo[Math.floor(Math.random() * Math.min(5, data.photos.photo.length))];
+      const photo = data.results[Math.floor(Math.random() * Math.min(5, data.results.length))];
       
-      // Fetch photographer info
-      const infoUrl = `https://www.flickr.com/services/rest/?method=flickr.photos.getInfo&api_key=${CONFIG.flickrApiKey}&photo_id=${photo.id}&format=json&nojsoncallback=1`;
-      const infoResponse = await fetch(infoUrl);
-      const infoData = await infoResponse.json();
+      const photographer = photo.user?.name || photo.user?.username || 'Unknown';
+      const photographerUrl = photo.user?.links?.html || `https://unsplash.com/@${photo.user?.username}`;
+      const photoUrl = photo.links?.html || photographerUrl;
       
-      const photographer = infoData.photo?.owner?.username || infoData.photo?.owner?.realname || 'Unknown';
-      const photoUrl = `https://www.flickr.com/photos/${photo.owner}/${photo.id}`;
-      
-      const imageUrl = `https://live.staticflickr.com/${photo.server}/${photo.id}_${photo.secret}_b.jpg`;
-      
-      // Download the image
+      // Download the image (using 'regular' size for good quality without being too large)
+      const imageUrl = photo.urls?.regular || photo.urls?.full;
       const imgResponse = await fetch(imageUrl);
       const imageBuffer = await imgResponse.arrayBuffer();
+      
+      // Trigger download endpoint (required by Unsplash API guidelines)
+      if (photo.links?.download_location) {
+        fetch(photo.links.download_location, {
+          headers: {
+            'Authorization': `Client-ID ${CONFIG.unsplashAccessKey}`
+          }
+        }).catch(() => {}); // Don't wait for this
+      }
       
       return {
         data: new Uint8Array(imageBuffer),
@@ -107,7 +116,7 @@ async function fetchBirdImage(birdName) {
       };
     }
   } catch (error) {
-    console.error('Error fetching Flickr image:', error.message);
+    console.error('Error fetching Unsplash image:', error.message);
   }
   
   return null;
@@ -201,7 +210,7 @@ async function postToBluesky(detection) {
     
     // Add photo credit if image is present
     if (image && image.photographer) {
-      postText += `\n\n📷 Photo: ${image.photographer} (Flickr)`;
+      postText += `\n\n📷 Photo: ${image.photographer} (Unsplash)`;
     }
     
     // Build the post with proper byte position tracking
@@ -247,7 +256,7 @@ async function postToBluesky(detection) {
       }
     }
     
-    // Add facet for Flickr photographer link if present
+    // Add facet for Unsplash photographer link if present
     if (image && image.photoUrl && image.photographer) {
       const photographerStart = postText.indexOf(image.photographer);
       if (photographerStart !== -1) {
