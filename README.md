@@ -5,7 +5,7 @@ Automatically posts bird detections from your BirdNET-PI station to Bluesky with
 ## Features
 
 - 🐦 Posts bird detections with species name, confidence, and timestamp
-- 📷 Includes beautiful bird photos from Flickr with photographer credit
+- 📷 Includes beautiful bird photos from Unsplash with photographer credit
 - 🔗 Clickable hashtags (#SpeciesName #BirdNET)
 - 🔊 Optional links to BirdWeather detection audio
 - ⏰ Configurable timezone support
@@ -17,7 +17,7 @@ Automatically posts bird detections from your BirdNET-PI station to Bluesky with
 - Docker and Docker Compose installed
 - A [BirdWeather](https://birdweather.com) station with BirdNET-PI
 - A [Bluesky](https://bsky.app) account for posting
-- A free [Flickr API key](https://www.flickr.com/services/apps/create/apply/)
+- A free [Unsplash API key](https://unsplash.com/developers)
 
 ## Quick Start
 
@@ -34,7 +34,7 @@ STATION_ID=your_station_id
 BIRDWEATHER_TOKEN=your_birdweather_token
 BLUESKY_HANDLE=your-bot.bsky.social
 BLUESKY_APP_PASSWORD=your_app_password
-FLICKR_API_KEY=your_flickr_api_key
+UNSPLASH_ACCESS_KEY=your_unsplash_api_key
 EOL
 ```
 
@@ -45,7 +45,7 @@ environment:
   - POLL_INTERVAL_MINUTES=15           # How often to check (minutes)
   - MIN_CONFIDENCE=0.7                 # Minimum confidence (0.0-1.0)
   - INCLUDE_LINK=true                  # Include BirdWeather link
-  - INCLUDE_IMAGE=true                 # Include Flickr images
+  - INCLUDE_IMAGE=true                 # Include Unsplash images
 ```
 
 4. **Start the bot**
