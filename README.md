@@ -1,23 +1,24 @@
 # BirdWeather to Bluesky Bot
 
-Automatically posts bird detections from your BirdNET-PI station to Bluesky with beautiful images from Flickr.
+Automatically posts bird detections from your BirdNET-PI station to Bluesky with beautiful images from Unsplash.
 
 ## Features
 
 - 🐦 Posts bird detections with species name, confidence, and timestamp
-- 📷 Includes beautiful bird photos from Flickr with photographer credit
+- 📷 Includes beautiful bird photos from Unsplash with photographer credit
 - 🔗 Clickable hashtags (#SpeciesName #BirdNET)
 - 🔊 Optional links to BirdWeather detection audio
 - ⏰ Configurable timezone support
 - 🐳 Docker-based for easy deployment
 - 💾 Persistent state across restarts
+- ✨ Deduplicates detections (posts only highest confidence per species)
 
 ## Prerequisites
 
 - Docker and Docker Compose installed
 - A [BirdWeather](https://birdweather.com) station with BirdNET-PI
 - A [Bluesky](https://bsky.app) account for posting
-- A free [Flickr API key](https://www.flickr.com/services/apps/create/apply/)
+- A free [Unsplash API key](https://unsplash.com/developers)
 
 ## Quick Start
 
@@ -34,7 +35,7 @@ STATION_ID=your_station_id
 BIRDWEATHER_TOKEN=your_birdweather_token
 BLUESKY_HANDLE=your-bot.bsky.social
 BLUESKY_APP_PASSWORD=your_app_password
-FLICKR_API_KEY=your_flickr_api_key
+UNSPLASH_ACCESS_KEY=your_unsplash_access_key
 EOL
 ```
 
@@ -45,7 +46,7 @@ environment:
   - POLL_INTERVAL_MINUTES=15           # How often to check (minutes)
   - MIN_CONFIDENCE=0.7                 # Minimum confidence (0.0-1.0)
   - INCLUDE_LINK=true                  # Include BirdWeather link
-  - INCLUDE_IMAGE=true                 # Include Flickr images
+  - INCLUDE_IMAGE=true                 # Include Unsplash images
 ```
 
 4. **Start the bot**
@@ -76,9 +77,11 @@ docker compose logs -f
 - Create a new app password (don't use your main password!)
 - Add to `.env` file
 
-**Flickr API Key:**
-- Apply at https://www.flickr.com/services/apps/create/apply/
-- Choose "Non-Commercial" (it's free and instant)
+**Unsplash Access Key:**
+- Go to https://unsplash.com/developers
+- Register as a developer (free)
+- Create a new application
+- Copy your "Access Key"
 - Add to `.env` file
 
 ### Timezone Options
@@ -126,8 +129,16 @@ Time: Dec 29, 2025, 10:30 AM EST
 
 🔊 Listen: app.birdweather.com/detections/...
 
-📷 Photo: photographer_name (Flickr)
+📷 Photo: photographer_name (Unsplash)
 ```
+
+## How It Works
+
+- Bot checks your BirdWeather station every 15 minutes
+- For each polling window, it posts only the **highest confidence** detection per species
+- This prevents spam from multiple detections of the same bird
+- Images are fetched from Unsplash's curated collection
+- All hashtags and links are clickable
 
 ## Troubleshooting
 
@@ -143,6 +154,10 @@ Time: Dec 29, 2025, 10:30 AM EST
 **Bot keeps restarting?**
 - Check credentials in `.env` file
 - View error logs: `docker compose logs`
+
+**No images showing?**
+- Verify your Unsplash Access Key is correct
+- Check Unsplash API rate limits (50 requests/hour on free tier)
 
 ## Development
 
@@ -180,7 +195,7 @@ MIT License - feel free to use and modify!
 
 - Built with [@atproto/api](https://github.com/bluesky-social/atproto) for Bluesky
 - Uses [BirdNET](https://birdnet.cornell.edu/) for bird detection
-- Images from [Flickr](https://www.flickr.com/) under Creative Commons licenses
+- Images from [Unsplash](https://unsplash.com/) 
 - Powered by [BirdWeather](https://birdweather.com/)
 
 ## Support
